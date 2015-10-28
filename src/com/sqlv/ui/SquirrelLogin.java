@@ -12,6 +12,9 @@ public class SquirrelLogin extends JFrame {
     private String username;
     private String password;
 
+    public static final String PASSWORD_MESSAGE = "Your password must contain at least one alphanumeric character or symbol.";
+    public static final String USERNAME_MESSAGE = "Your username must contain at least one alphanumeric character or symbol.";
+
     /**
      * Constructs a login interface containing containers for username and password input.
      */
@@ -30,14 +33,28 @@ public class SquirrelLogin extends JFrame {
         JTextField passField = new JTextField();
         passField.setPreferredSize(new Dimension(100, 20));
         top.add(passField);
-        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-        JButton submit = new JButton("Submit");
+        JPanel bottom = new JPanel();
+        bottom.setLayout(new BoxLayout(bottom, BoxLayout.X_AXIS));
+        JButton submit = new JButton("Sign in");
         submit.addActionListener(e -> {
             username = userField.getText().trim();
             password = passField.getText().trim();
-            dispose();
+            if (username != null && !username.isEmpty()) {
+                if (password != null && !password.isEmpty()) {
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(this, PASSWORD_MESSAGE, "Password conflict", JOptionPane.WARNING_MESSAGE);
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, USERNAME_MESSAGE, "Username conflict", JOptionPane.WARNING_MESSAGE);
+            }
         });
+        bottom.add(Box.createHorizontalGlue());
         bottom.add(submit);
+        JButton cancel = new JButton("Cancel");
+        cancel.addActionListener(e -> System.exit(0));
+        bottom.add(Box.createHorizontalStrut(15));
+        bottom.add(cancel);
         JPanel master = new JPanel();
         master.setLayout(new BoxLayout(master, BoxLayout.Y_AXIS));
         master.add(Box.createVerticalStrut(15));
