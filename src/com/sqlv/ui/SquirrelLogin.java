@@ -90,7 +90,7 @@ public class SquirrelLogin extends JFrame {
         setLocationRelativeTo(null);
         addWindowListener(new WindowAdapter() {
             @Override
-            public void windowClosed(WindowEvent e) {
+            public void windowClosing(WindowEvent e) {
                 status = STATUS_CLOSED;
             }
         });

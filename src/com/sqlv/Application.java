@@ -30,6 +30,10 @@ public class Application {
         return null;
     }
 
+    /**
+     * Driver for SQuirreL Viewer.
+     * @param args Command line arguments to run.
+     */
     public static void main(String... args) {
         //getConnection();
         if (OperatingSystem.getSystem() == OperatingSystem.MAC) {
