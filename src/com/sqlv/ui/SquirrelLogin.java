@@ -50,17 +50,17 @@ public class SquirrelLogin extends JFrame {
         bottom.setLayout(new BoxLayout(bottom, BoxLayout.LINE_AXIS));
         JButton submit = new JButton("Sign in");
         submit.addActionListener(e -> {
-            username = userField.getText();
-            char[] p = passField.getPassword();
+            username = userField.getText().replaceAll("\\s+", "");
+            password = new String(passField.getPassword()).replaceAll("\\s+", "");
             if (username != null && !username.isEmpty()) {
-                username = username.trim();
-                if (p != null && p.length > 0) {
-                    password = new String(p).trim();
+                if (password != null && !password.isEmpty()) {
                     dispose();
                 } else {
+                    password = null;
                     JOptionPane.showMessageDialog(this, PASSWORD_MESSAGE, "Password conflict", JOptionPane.WARNING_MESSAGE);
                 }
             } else {
+                username = null;
                 JOptionPane.showMessageDialog(this, USERNAME_MESSAGE, "Username conflict", JOptionPane.WARNING_MESSAGE);
             }
         });
