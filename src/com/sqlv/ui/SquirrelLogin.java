@@ -19,10 +19,10 @@ public class SquirrelLogin extends JFrame {
     public static final String PASSWORD_MESSAGE = "Your password must contain at least one alphanumeric character or symbol.";
     public static final String USERNAME_MESSAGE = "Your username must contain at least one alphanumeric character or symbol.";
 
-    public static char PASS_SHOWING = (char) 0;
-    public static char PASS_HIDDEN = '\u25CF';
+    public static final char PASS_SHOWING = (char) 0;
+    public static final char PASS_HIDDEN = '\u25CF';
 
-    public static int STATUS_CLOSED = 1;
+    public static final int STATUS_CLOSED = 1;
 
     /**
      * Constructs a login interface containing containers for username and password input.
