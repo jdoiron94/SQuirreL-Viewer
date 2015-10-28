@@ -2,6 +2,8 @@ package com.sqlv.ui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 /**
  * @author Jacob
@@ -9,18 +11,25 @@ import java.awt.*;
  */
 public class SquirrelLogin extends JFrame {
 
+    private int status;
+
     private String username;
     private String password;
 
     public static final String PASSWORD_MESSAGE = "Your password must contain at least one alphanumeric character or symbol.";
     public static final String USERNAME_MESSAGE = "Your username must contain at least one alphanumeric character or symbol.";
 
+    public static char PASS_SHOWING = (char) 0;
+    public static char PASS_HIDDEN = '\u25CF';
+
+    public static int STATUS_CLOSED = 1;
+
     /**
      * Constructs a login interface containing containers for username and password input.
      */
     public SquirrelLogin() {
         super("Squirrel details");
-        setLayout(new BoxLayout(getContentPane(), BoxLayout.X_AXIS));
+        setLayout(new BoxLayout(getContentPane(), BoxLayout.LINE_AXIS));
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         JPanel top = new JPanel(new GridLayout(2, 2, 50, 15));
         JLabel userLabel = new JLabel("Username:");
@@ -30,17 +39,23 @@ public class SquirrelLogin extends JFrame {
         top.add(userField);
         JLabel passLabel = new JLabel("Password:");
         top.add(passLabel);
-        JTextField passField = new JTextField();
+        JPasswordField passField = new JPasswordField();
         passField.setPreferredSize(new Dimension(100, 20));
         top.add(passField);
+        JPanel mid = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        JCheckBox show = new JCheckBox("Show password");
+        show.addActionListener(e -> passField.setEchoChar(show.isSelected() ? PASS_SHOWING : PASS_HIDDEN));
+        mid.add(show);
         JPanel bottom = new JPanel();
-        bottom.setLayout(new BoxLayout(bottom, BoxLayout.X_AXIS));
+        bottom.setLayout(new BoxLayout(bottom, BoxLayout.LINE_AXIS));
         JButton submit = new JButton("Sign in");
         submit.addActionListener(e -> {
-            username = userField.getText().trim();
-            password = passField.getText().trim();
+            username = userField.getText();
+            char[] p = passField.getPassword();
             if (username != null && !username.isEmpty()) {
-                if (password != null && !password.isEmpty()) {
+                username = username.trim();
+                if (p != null && p.length > 0) {
+                    password = new String(p).trim();
                     dispose();
                 } else {
                     JOptionPane.showMessageDialog(this, PASSWORD_MESSAGE, "Password conflict", JOptionPane.WARNING_MESSAGE);
@@ -52,13 +67,18 @@ public class SquirrelLogin extends JFrame {
         bottom.add(Box.createHorizontalGlue());
         bottom.add(submit);
         JButton cancel = new JButton("Cancel");
-        cancel.addActionListener(e -> System.exit(0));
+        cancel.addActionListener(e -> {
+            status = STATUS_CLOSED;
+            dispose();
+        });
         bottom.add(Box.createHorizontalStrut(15));
         bottom.add(cancel);
         JPanel master = new JPanel();
-        master.setLayout(new BoxLayout(master, BoxLayout.Y_AXIS));
+        master.setLayout(new BoxLayout(master, BoxLayout.PAGE_AXIS));
         master.add(Box.createVerticalStrut(15));
         master.add(top);
+        master.add(Box.createVerticalStrut(15));
+        master.add(mid);
         master.add(Box.createVerticalStrut(15));
         master.add(bottom);
         master.add(Box.createVerticalStrut(15));
@@ -66,7 +86,14 @@ public class SquirrelLogin extends JFrame {
         add(master, BorderLayout.NORTH);
         add(Box.createHorizontalStrut(15));
         pack();
+        setResizable(false);
         setLocationRelativeTo(null);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                status = STATUS_CLOSED;
+            }
+        });
     }
 
     /**
@@ -81,5 +108,12 @@ public class SquirrelLogin extends JFrame {
      */
     public String getPassword() {
         return password;
+    }
+
+    /**
+     * @return <t>true</t> if the panel was closed; otherwise, <t>false</t>.
+     */
+    public boolean closed() {
+        return status == STATUS_CLOSED;
     }
 }

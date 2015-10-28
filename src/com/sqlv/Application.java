@@ -50,10 +50,14 @@ public class Application {
                 e.printStackTrace();
             }
         }
-        EventQueue.invokeLater(() -> {
-            SquirrelFrame frame = new SquirrelFrame(login.getUsername(), login.getPassword());
-            frame.setVisible(true);
-            System.out.println("user: " + login.getUsername() + ", pass: " + login.getPassword());
-        });
+        if (!login.closed()) {
+            EventQueue.invokeLater(() -> {
+                SquirrelFrame frame = new SquirrelFrame(login.getUsername(), login.getPassword());
+                frame.setVisible(true);
+                System.out.println("user: " + login.getUsername() + ", pass: " + login.getPassword());
+            });
+        } else {
+            System.exit(0);
+        }
     }
 }
