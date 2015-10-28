@@ -1,10 +1,7 @@
 package com.sqlv.ui;
 
 import javax.swing.*;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import java.awt.*;
 
 /**
  * @author Jacob
@@ -20,6 +17,7 @@ public class SquirrelLogin extends JFrame {
      */
     public SquirrelLogin() {
         super("Squirrel details");
+        setLayout(new BoxLayout(getContentPane(), BoxLayout.X_AXIS));
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         JPanel top = new JPanel(new GridLayout(2, 2, 50, 15));
         JLabel userLabel = new JLabel("Username:");
@@ -47,7 +45,6 @@ public class SquirrelLogin extends JFrame {
         master.add(Box.createVerticalStrut(15));
         master.add(bottom);
         master.add(Box.createVerticalStrut(15));
-        setLayout(new BoxLayout(getContentPane(), BoxLayout.X_AXIS));
         add(Box.createHorizontalStrut(15));
         add(master, BorderLayout.NORTH);
         add(Box.createHorizontalStrut(15));

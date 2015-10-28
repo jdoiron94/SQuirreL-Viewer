@@ -10,11 +10,30 @@ import java.awt.Dimension;
  */
 public class SquirrelFrame extends JFrame {
 
-    public SquirrelFrame() {
+    private String user;
+    private String pass;
+
+    public SquirrelFrame(String user, String pass) {
         super("SQuirreL Viewer");
+        this.user = user;
+        this.pass = pass;
         setPreferredSize(new Dimension(800, 480));
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         pack();
         setLocationRelativeTo(null);
+    }
+
+    /**
+     * @return The entered username.
+     */
+    public String getUser() {
+        return user;
+    }
+
+    /**
+     * @return The entered password.
+     */
+    public String getPass() {
+        return pass;
     }
 }
