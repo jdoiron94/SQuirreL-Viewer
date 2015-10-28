@@ -18,6 +18,6 @@ public enum OperatingSystem {
                 return o;
             }
         }
-        return null;
+        return OTHER;
     }
 }
