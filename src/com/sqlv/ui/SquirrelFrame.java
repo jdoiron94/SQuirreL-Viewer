@@ -2,6 +2,8 @@ package com.sqlv.ui;
 
 import javax.swing.*;
 import java.awt.Dimension;
+import java.awt.Image;
+import java.net.URL;
 
 /**
  * @author Jacob Doiron
@@ -9,26 +11,44 @@ import java.awt.Dimension;
  */
 public class SquirrelFrame extends JFrame {
 
-    private String user;
-    private String pass;
+    private String username;
+    private String password;
+    private Image icon;
+
+    private boolean passSelected;
 
     /**
      * Constructs a SquirrelFrame and sets the user and pass fields.
-     * @param user The username to be set.
-     * @param pass The password to be set.
+     *
+     * @param username The username to be set.
+     * @param password The password to be set.
+     * @param passSelected Whether or not to show the password.
      */
-    public SquirrelFrame(String user, String pass) {
+    public SquirrelFrame(String username, String password, boolean passSelected) {
         super("SQuirreL Viewer");
-        this.user = user;
-        this.pass = pass;
+        this.username = username;
+        this.password = password;
+        this.passSelected = passSelected;
+        if (icon == null) {
+            System.out.println("acquiring squirrel icon");
+            Class clazz = getClass();
+            ClassLoader loader = clazz.getClassLoader();
+            URL url = loader.getResource("./icons/squirrel.png");
+            if (url != null) {
+                icon = new ImageIcon(url).getImage();
+            }
+        }
         setPreferredSize(new Dimension(800, 480));
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         JMenuBar bar = new JMenuBar();
         JMenu file = new JMenu("File");
         JMenuItem login = new JMenuItem("Login");
         login.addActionListener(e -> {
-            SquirrelLogin sql = new SquirrelLogin();
+            SquirrelLogin sql = new SquirrelLogin(this.username, this.password, this.passSelected);
             sql.setVisible(true);
+            this.username = sql.getUsername();
+            this.password = sql.getPassword();
+            this.passSelected = sql.isPassSelected();
         });
         file.add(login);
         JMenuItem exit = new JMenuItem("Exit");
@@ -37,20 +57,23 @@ public class SquirrelFrame extends JFrame {
         bar.add(file);
         setJMenuBar(bar);
         pack();
+        if (icon != null) {
+            setIconImage(icon);
+        }
         setLocationRelativeTo(null);
     }
 
     /**
      * @return The entered username.
      */
-    public String getUser() {
-        return user;
+    public String getUsername() {
+        return username;
     }
 
     /**
      * @return The entered password.
      */
-    public String getPass() {
-        return pass;
+    public String getPassword() {
+        return password;
     }
 }

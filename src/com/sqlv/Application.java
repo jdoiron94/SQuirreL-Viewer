@@ -32,10 +32,10 @@ public class Application {
 
     /**
      * Driver for SQuirreL Viewer.
+     *
      * @param args Command line arguments to run.
      */
     public static void main(String... args) {
-        //getConnection();
         if (OperatingSystem.getSystem() == OperatingSystem.MAC) {
             System.setProperty("apple.laf.useScreenMenuBar", "true");
         } else {
@@ -45,20 +45,15 @@ public class Application {
                 System.err.println("Could not set system look and feel.");
             }
         }
-        SquirrelLogin login = new SquirrelLogin();
+        SquirrelLogin login = new SquirrelLogin(null, null, false);
         login.setVisible(true);
-        while (login.isVisible()) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
         if (!login.closed()) {
             EventQueue.invokeLater(() -> {
-                SquirrelFrame frame = new SquirrelFrame(login.getUsername(), login.getPassword());
+                String username = login.getUsername();
+                String password = login.getPassword();
+                boolean showing = login.isPassSelected();
+                SquirrelFrame frame = new SquirrelFrame(username, password, showing);
                 frame.setVisible(true);
-                System.out.println("user: " + login.getUsername() + ", pass: " + login.getPassword());
             });
         } else {
             System.exit(0);
