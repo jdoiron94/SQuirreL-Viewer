@@ -18,6 +18,8 @@ public class SquirrelLogin extends JDialog {
     private String username;
     private String password;
 
+    private final JFrame owner;
+
     private static final String PASSWORD_MESSAGE = "Your password must contain at least one alphanumeric character or symbol.";
     private static final String USERNAME_MESSAGE = "Your username must contain at least one alphanumeric character or symbol.";
 
@@ -36,7 +38,8 @@ public class SquirrelLogin extends JDialog {
      * @param password The default password to set.
      * @param passSelected Whether or not to show the password.
      */
-    public SquirrelLogin(String username, String password, boolean passSelected) {
+    public SquirrelLogin(JFrame owner, String username, String password, boolean passSelected) {
+        this.owner = owner;
         this.username = username;
         this.password = password;
         this.passSelected = passSelected;
@@ -124,7 +127,7 @@ public class SquirrelLogin extends JDialog {
             setIconImage(icon);
         }
         setResizable(false);
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(owner);
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {

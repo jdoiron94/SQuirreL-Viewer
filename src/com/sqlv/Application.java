@@ -46,7 +46,7 @@ public class Application {
             }
         }
         EventQueue.invokeLater(() -> {
-            SquirrelLogin login = new SquirrelLogin(null, null, false);
+            SquirrelLogin login = new SquirrelLogin(null, null, null, false);
             login.setVisible(true);
             if (!login.closed()) {
                 String username = login.getUsername();

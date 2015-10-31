@@ -44,7 +44,7 @@ public class SquirrelFrame extends JFrame {
         JMenu file = new JMenu("File");
         JMenuItem login = new JMenuItem("Login");
         login.addActionListener(e -> {
-            SquirrelLogin sql = new SquirrelLogin(this.username, this.password, this.passSelected);
+            SquirrelLogin sql = new SquirrelLogin(this, this.username, this.password, this.passSelected);
             sql.setVisible(true);
             this.username = sql.getUsername();
             this.password = sql.getPassword();
