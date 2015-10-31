@@ -45,18 +45,18 @@ public class Application {
                 System.err.println("Could not set system look and feel.");
             }
         }
-        SquirrelLogin login = new SquirrelLogin(null, null, false);
-        login.setVisible(true);
-        if (!login.closed()) {
-            EventQueue.invokeLater(() -> {
+        EventQueue.invokeLater(() -> {
+            SquirrelLogin login = new SquirrelLogin(null, null, false);
+            login.setVisible(true);
+            if (!login.closed()) {
                 String username = login.getUsername();
                 String password = login.getPassword();
                 boolean showing = login.isPassSelected();
                 SquirrelFrame frame = new SquirrelFrame(username, password, showing);
                 frame.setVisible(true);
-            });
-        } else {
-            System.exit(0);
-        }
+            } else {
+                System.exit(0);
+            }
+        });
     }
 }
