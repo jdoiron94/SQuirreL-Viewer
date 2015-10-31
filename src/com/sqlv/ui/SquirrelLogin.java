@@ -34,6 +34,7 @@ public class SquirrelLogin extends JDialog {
      * /**
      * Constructs a login interface containing containers for username and password input.
      *
+     * @param owner The frame which owns this object.
      * @param username The default username to set.
      * @param password The default password to set.
      * @param passSelected Whether or not to show the password.
