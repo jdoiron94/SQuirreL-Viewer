@@ -112,16 +112,10 @@ public class SquirrelLogin extends JDialog {
         bottom.add(cancel);
         JPanel master = new JPanel();
         master.setLayout(new BoxLayout(master, BoxLayout.PAGE_AXIS));
-        master.add(Box.createVerticalStrut(15));
-        master.add(top);
-        master.add(Box.createVerticalStrut(15));
+        add(master, top, 0, 15, true);
         master.add(mid);
-        master.add(Box.createVerticalStrut(15));
-        master.add(bottom);
-        master.add(Box.createVerticalStrut(15));
-        add(Box.createHorizontalStrut(15));
-        add(master, BorderLayout.NORTH);
-        add(Box.createHorizontalStrut(15));
+        add(master, bottom, 0, 15, true);
+        add(getContentPane(), master, 15, 0, true);
         pack();
         setModal(true);
         if (icon != null) {
@@ -163,5 +157,38 @@ public class SquirrelLogin extends JDialog {
      */
     public boolean closed() {
         return status == STATUS_CLOSED;
+    }
+
+    /**
+     * Pads a container with the specified padding.
+     *
+     * @param container The container to pad.
+     * @param hGap The horizontal gap.
+     * @param vGap The vertical gap.
+     */
+    private void pad(Container container, int hGap, int vGap) {
+        if (hGap > 0) {
+            container.add(Box.createHorizontalStrut(hGap));
+        }
+        if (vGap > 0) {
+            container.add(Box.createVerticalStrut(vGap));
+        }
+    }
+
+    /**
+     * Adds the specified component to the container with specified padding.
+     *
+     * @param container The container to add a component to.
+     * @param component The component to add.
+     * @param horizontal The horizontal gap to pad.
+     * @param vertical The vertical gap to pad.
+     * @param padBoth <t>true</t> to pad both before and after adding the component; otherwise, <t>false</t>.
+     */
+    private void add(Container container, Component component, int horizontal, int vertical, boolean padBoth) {
+        if (padBoth) {
+            pad(container, horizontal, vertical);
+        }
+        container.add(component);
+        pad(container, horizontal, vertical);
     }
 }
