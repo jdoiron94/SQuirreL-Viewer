@@ -99,25 +99,27 @@ public class SquirrelFrame extends JFrame {
         String[] split = text.split("\\n");
         boolean found = false;
         List<Relvar> relvars = new ArrayList<>();
-        Relvar relvar = null;
+        List<String> attributes = new ArrayList<>();
+        String title = null;
+        Relvar relvar;
         for (String s : split) {
             if (s.contains("CREATE")) {
                 String[] stripped = s.split("`");
-                String table = stripped[1].split("`")[0];
-                Relvar r = new Relvar(table);
-                relvar = r;
-                relvars.add(r);
+                title = stripped[1].split("`")[0];
+                attributes = new ArrayList<>();
                 found = true;
             } else if (found) {
                 if (s.contains("PRIMARY")) {
                     String[] stripped = s.split("`");
                     String key = stripped[1].split("`")[0];
-                    relvar.setKey(key);
+                    relvar = new Relvar(title, key);
+                    attributes.forEach(relvar::addAttribute);
+                    relvars.add(relvar);
                     found = false;
                 } else {
                     String[] stripped = s.split("`");
                     String attribute = stripped[1].split("`")[0];
-                    relvar.addAttribute(attribute);
+                    attributes.add(attribute);
                 }
             }
         }

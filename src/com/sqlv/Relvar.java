@@ -10,7 +10,7 @@ import java.util.List;
 public class Relvar {
 
     private final String title;
-    private String key;
+    private final String key;
 
     private final List<String> attributes;
 
@@ -19,8 +19,9 @@ public class Relvar {
      *
      * @param title The title of the relvar.
      */
-    public Relvar(String title) {
+    public Relvar(String title, String key) {
         this.title = title;
+        this.key = key;
         this.attributes = new ArrayList<>();
     }
 
@@ -31,15 +32,6 @@ public class Relvar {
      */
     public void addAttribute(String attribute) {
         attributes.add(attribute);
-    }
-
-    /**
-     * Sets the primary key for the relvar.
-     *
-     * @param key The primary key to set.
-     */
-    public void setKey(String key) {
-        this.key = key;
     }
 
     /**
