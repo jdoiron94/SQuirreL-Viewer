@@ -4,8 +4,11 @@ import com.sqlv.Relvar;
 import com.sqlv.api.util.IO;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumnModel;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Image;
 import java.io.File;
 import java.net.URI;
@@ -120,6 +123,10 @@ public class SquirrelFrame extends JFrame {
                 } else {
                     String[] stripped = s.split("`");
                     String attribute = stripped[1].split("`")[0];
+                    if (attributes.size() == 0) {
+                        attributes.add("<html><b>" + attribute + "</b></html>");
+                        continue;
+                    }
                     attributes.add(attribute);
                 }
             } else if (s.contains("INSERT")) {
@@ -153,6 +160,7 @@ public class SquirrelFrame extends JFrame {
                     r.getAttributes().toArray(new String[r.getAttributes().size()]));
             JTable table = new JTable(model);
             table.setModel(model);
+            table.getTableHeader().setReorderingAllowed(false);
             JScrollPane panel = new JScrollPane(table);
             Tab tab = new Tab(r.getTitle(), table, r);
             pane.addTab(tab.getTitle(), panel);
