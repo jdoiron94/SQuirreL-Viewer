@@ -4,6 +4,7 @@ import com.sqlv.Relvar;
 import com.sqlv.api.util.IO;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.Dimension;
 import java.awt.Image;
 import java.io.File;
@@ -148,7 +149,10 @@ public class SquirrelFrame extends JFrame {
      */
     private void setup(List<Relvar> relvars) {
         for (Relvar r : relvars) {
-            JTable table = new JTable(r.getData(), r.getAttributes().toArray(new String[r.getAttributes().size()]));
+            NonEditableModel model = new NonEditableModel(r.getData(),
+                    r.getAttributes().toArray(new String[r.getAttributes().size()]));
+            JTable table = new JTable(model);
+            table.setModel(model);
             JScrollPane panel = new JScrollPane(table);
             Tab tab = new Tab(r.getTitle(), table, r);
             pane.addTab(tab.getTitle(), panel);
