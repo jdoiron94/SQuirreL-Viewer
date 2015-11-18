@@ -12,6 +12,8 @@ public class Relvar {
     private final String title;
     private final String key;
 
+    private String[][] data;
+
     private final List<String> attributes;
 
     /**
@@ -32,6 +34,22 @@ public class Relvar {
      */
     public void addAttribute(String attribute) {
         attributes.add(attribute);
+    }
+
+    /**
+     * Sets the values for the relvar.
+     *
+     * @param data The data to set.
+     */
+    public void setData(String[][] data) {
+        this.data = data;
+    }
+
+    /**
+     * @return The values of the relvar.
+     */
+    public String[][] getData() {
+        return data;
     }
 
     /**

@@ -101,7 +101,7 @@ public class SquirrelFrame extends JFrame {
         List<Relvar> relvars = new ArrayList<>();
         List<String> attributes = new ArrayList<>();
         String title = null;
-        Relvar relvar;
+        Relvar relvar = null;
         for (String s : split) {
             if (s.contains("CREATE")) {
                 String[] stripped = s.split("`");
@@ -121,19 +121,57 @@ public class SquirrelFrame extends JFrame {
                     String attribute = stripped[1].split("`")[0];
                     attributes.add(attribute);
                 }
+            } else if (s.contains("INSERT")) {
+                String stripped = s.split("VALUES ")[1];
+                String[] tuples = stripped.split("\\),");
+                int tupleCount = count(')', stripped);
+                String[][] data = new String[tupleCount][1];
+                for (int i = 0; i < tupleCount; i++) {
+                    String[] x = tuples[i].replace("(", "").replace(");", "").split(",");
+                    for (int j = 0; j < x.length; j++) {
+                        x[j] = x[j].replace("'", "");
+                    }
+                    data[i] = x;
+                }
+                if (relvar != null) {
+                    relvar.setData(data);
+                }
             }
         }
+        setup(relvars);
+    }
+
+    /**
+     * Sets up the JTable for each tab.
+     *
+     * @param relvars The list of relvars.
+     */
+    private void setup(List<Relvar> relvars) {
         for (Relvar r : relvars) {
-            System.out.println("TABLE: " + r.getTitle());
-            JTable table = new JTable(new Object[0][0], r.getAttributes().toArray(new String[r.getAttributes().size()]));
+            JTable table = new JTable(r.getData(), r.getAttributes().toArray(new String[r.getAttributes().size()]));
             JScrollPane panel = new JScrollPane(table);
-            Tab tab = new Tab(r.getTitle(), table);
+            Tab tab = new Tab(r.getTitle(), table, r);
             pane.addTab(tab.getTitle(), panel);
-            for (String s : r.getAttributes()) {
-                System.out.println("\tATTRIBUTE: " + s);
-            }
-            System.out.println("\tKEY: " + r.getKey());
+            System.out.println("KEY: " + r.getKey());
         }
+    }
+
+    /**
+     * Gets the count of a given character within a String.
+     *
+     * @param c The character to search for.
+     * @param text The text to query.
+     * @return The count of the character within the String.
+     */
+    private int count(char c, String text) {
+        int count = 0;
+        char[] chars = text.toCharArray();
+        for (char ch : chars) {
+            if (ch == c) {
+                count++;
+            }
+        }
+        return count;
     }
 
     /**

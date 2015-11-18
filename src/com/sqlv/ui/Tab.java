@@ -1,5 +1,7 @@
 package com.sqlv.ui;
 
+import com.sqlv.Relvar;
+
 import javax.swing.JTable;
 
 /**
@@ -10,6 +12,7 @@ public class Tab {
 
     private final String title;
     private final JTable table;
+    private final Relvar relvar;
 
     /**
      * Constructs a Tab with a title and an associated JTable.
@@ -17,9 +20,10 @@ public class Tab {
      * @param title The title to be set.
      * @param table The JTable associated with the tab.
      */
-    public Tab(String title, JTable table) {
+    public Tab(String title, JTable table, Relvar relvar) {
         this.title = title;
         this.table = table;
+        this.relvar = relvar;
     }
 
     /**
@@ -34,5 +38,12 @@ public class Tab {
      */
     public JTable getTable() {
         return table;
+    }
+
+    /**
+     * @return The Relvar associated with the tab.
+     */
+    public Relvar getRelvar() {
+        return relvar;
     }
 }
