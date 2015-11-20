@@ -10,4 +10,4 @@ select StudentID from test.student;
 
 select StudentID from test.student where StudentCI = '3018675309';
 
-select Classroom from test.teacher where TeacherID = '22123';
+select Classroom from test.teacher where TeacherID = 22123;
