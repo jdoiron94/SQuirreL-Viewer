@@ -276,14 +276,11 @@ public class SquirrelFrame extends JFrame {
         queryBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 System.out.println("state change");
+                runQuery(queries.get(queryBox.getSelectedIndex()));
             }
         });
         panel.add(queryBox);
         runQuery(queries.get(2));
-        /*Relvar relvar = new Relvar("results", null);
-        relvar.se
-        Tab results = new Tab();
-        pane.addTab("results", );*/
     }
 
     /**
@@ -292,8 +289,6 @@ public class SquirrelFrame extends JFrame {
      * @param query The query to run.
      */
     private void runQuery(Query query) {
-        //Relvar relvar = query.getRelvar();
-        //String[][] data = relvar.getData();
         AtomicReference<JTable> table = new AtomicReference<>(new JTable());
         if (query.getAttribute() == null) {
              table.set(getColumn(query.getAttributes(), query.getRelvar()));
@@ -301,7 +296,11 @@ public class SquirrelFrame extends JFrame {
         JScrollPane panel = new JScrollPane(table.get());
         panel.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         panel.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        if (pane.getTabCount() == 4) {
+            pane.remove(pane.getComponentAt(3));
+        }
         pane.addTab("results", panel);
+        pane.setSelectedIndex(3);
     }
 
     /**
