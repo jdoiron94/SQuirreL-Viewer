@@ -16,6 +16,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author Jacob Doiron
@@ -55,7 +57,6 @@ public class SquirrelFrame extends JFrame {
         this.queries = new ArrayList<>();
         this.tabs = new ArrayList<>();
         if (icon == null) {
-            System.out.println("acquiring squirrel icon");
             Class clazz = getClass();
             ClassLoader loader = clazz.getClassLoader();
             URL url = loader.getResource("./icons/squirrel.png");
@@ -113,12 +114,8 @@ public class SquirrelFrame extends JFrame {
         file.add(exit);
         bar.add(file);
         setJMenuBar(bar);
-        JPanel left = new JPanel();
-        left.setLayout(new BoxLayout(left, BoxLayout.PAGE_AXIS));
-        left.add(pane);
-        left.add(panel);
-        setLayout(new BoxLayout(getContentPane(), BoxLayout.LINE_AXIS));
-        add(left);
+        add(pane);
+        add(panel);
         pack();
         if (icon != null) {
             setIconImage(icon);
@@ -219,9 +216,12 @@ public class SquirrelFrame extends JFrame {
             List<String> attributes = new ArrayList<>();
             AtomicReference<String> table = new AtomicReference<>();
             AtomicReference<String> searchValue = new AtomicReference<>();
-            String[] separated = s.replace(",", "").replace("'", "").replace(";", "").replace("=", "").split(" ");
+            String updated = s.replace(",", "").replace("=", "").replace(";", "");
+            String[] separated = updated.split(" ");
+            Pattern regex = Pattern.compile("[^\\s\"']+|\"([^\"]*)\"|'([^']*)'");
+            Matcher matcher = regex.matcher(updated);
             outer: for (String x : separated) {
-                if (s.isEmpty()) {
+                if (x.isEmpty()) {
                     continue;
                 } else if (search) {
                     searchAttribute = x;
@@ -229,7 +229,16 @@ public class SquirrelFrame extends JFrame {
                     found = true;
                     continue;
                 } else if (found) {
-                    searchValue.set(x);
+                    while (matcher.find()) {
+                        if (matcher.group(2) != null) {
+                            String val = matcher.group(2);
+                            searchValue.set(val);
+                            break;
+                        } else {
+                            String val = matcher.group();
+                            searchValue.set(val);
+                        }
+                    }
                     break;
                 }
                 for (String sk : skips) {
@@ -275,12 +284,11 @@ public class SquirrelFrame extends JFrame {
         queries.forEach(q -> queryBox.addItem(q.getQuery()));
         queryBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
-                System.out.println("state change");
                 runQuery(queries.get(queryBox.getSelectedIndex()));
             }
         });
         panel.add(queryBox);
-        runQuery(queries.get(2));
+        runQuery(queries.get(0));
     }
 
     /**
@@ -290,14 +298,11 @@ public class SquirrelFrame extends JFrame {
      */
     private void runQuery(Query query) {
         AtomicReference<JTable> table = new AtomicReference<>(new JTable());
-        if (query.getAttribute() == null) {
-             table.set(getColumn(query.getAttributes(), query.getRelvar()));
-        }
+        table.set(queryTable(query.getAttributes(), query.getAttribute(), query.getValue(), query.getRelvar()));
         JScrollPane panel = new JScrollPane(table.get());
         panel.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-        panel.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         if (pane.getTabCount() == 4) {
-            pane.remove(pane.getComponentAt(3));
+            pane.removeTabAt(3);
         }
         pane.addTab("results", panel);
         pane.setSelectedIndex(3);
@@ -310,16 +315,14 @@ public class SquirrelFrame extends JFrame {
      * @param relvar The relvar from which to get the attribute.
      * @return The JTable representation of the column.
      */
-    private JTable getColumn(List<String> attributes, Relvar relvar) {
+    private JTable queryTable(List<String> attributes, String searchAttribute, String value, Relvar relvar) {
         int[] columns = new int[attributes.size()];
         AtomicInteger index = new AtomicInteger(0);
         attributes.stream().forEachOrdered(a -> {
-            System.out.println("KEY: " + relvar.getKey());
             a = a.equals(relvar.getKey()) ? "<html><b>" + a + "</b></html>" : a;
             attributes.set(index.get(), a);
             int idx = relvar.getAttributes().indexOf(a);
             columns[index.get()] = idx;
-            System.out.println(a + " column found at index " + idx);
             index.set(index.get() + 1);
         });
         AtomicReference<JTable> table = new AtomicReference<>();
@@ -329,10 +332,15 @@ public class SquirrelFrame extends JFrame {
             }
         });
         TableModel tableModel = table.get().getModel();
-        int rows = tableModel.getRowCount();
+        int row = getRowIndex(value, tableModel);
+        int rows = searchAttribute == null ? tableModel.getRowCount() : 1;
         String[][] output = new String[rows][columns.length];
         for (int i = 0; i < columns.length; i++) {
             int column = table.get().convertColumnIndexToModel(columns[i]);
+            if (searchAttribute != null) {
+                output[0][i] = tableModel.getValueAt(row, column).toString();
+                continue;
+            }
             for (int j = 0; j < rows; j++) {
                 output[j][i] = tableModel.getValueAt(j, column).toString();
             }
@@ -340,8 +348,25 @@ public class SquirrelFrame extends JFrame {
         NonEditableModel model = new NonEditableModel(output, attributes.toArray(new String[attributes.size()]));
         JTable t = new JTable(model);
         t.getTableHeader().setReorderingAllowed(false);
-        System.out.println(t.getRowCount());
         return t;
+    }
+
+    /**
+     * Gets the row index for the specified value within the table model.
+     *
+     * @param value The value to search for.
+     * @param model The model to search in.
+     * @return The index at which the value was found.
+     */
+    private int getRowIndex(String value, TableModel model) {
+        for (int i = 0; i < model.getRowCount(); i++) {
+            for (int j = 0; j < model.getColumnCount(); j++) {
+                if (model.getValueAt(i, j).equals(value)) {
+                    return i;
+                }
+            }
+        }
+        return -1;
     }
 
     /**

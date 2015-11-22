@@ -42,7 +42,6 @@ public class SquirrelLogin extends JDialog {
         this.password = password;
         this.passSelected = passSelected;
         if (icon == null) {
-            System.out.println("acquiring lock icon");
             Class clazz = getClass();
             ClassLoader loader = clazz.getClassLoader();
             URL url = loader.getResource("./icons/lock.png");
@@ -87,7 +86,6 @@ public class SquirrelLogin extends JDialog {
             this.passSelected = show.isSelected();
             if (this.username != null && !this.username.isEmpty()) {
                 if (this.password != null && !this.password.isEmpty()) {
-                    System.out.printf("user: %s, pass: %s\n", this.username, this.password);
                     dispose();
                 } else {
                     this.password = null;
