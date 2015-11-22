@@ -1,20 +1,18 @@
 package com.sqlv.ui;
 
+import com.sqlv.Query;
 import com.sqlv.Relvar;
 import com.sqlv.api.util.IO;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumnModel;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Image;
+import java.awt.*;
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author Jacob Doiron
@@ -28,7 +26,11 @@ public class SquirrelFrame extends JFrame {
 
     private boolean passSelected;
 
+    private final JPanel panel;
     private final JTabbedPane pane;
+    private final JComboBox<String> queryBox;
+    private final List<Relvar> relvars;
+    private final List<Query> queries;
 
     /**
      * Constructs a SquirrelFrame and sets the user and pass fields.
@@ -42,7 +44,11 @@ public class SquirrelFrame extends JFrame {
         this.username = username;
         this.password = password;
         this.passSelected = passSelected;
+        this.panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
         this.pane = new JTabbedPane();
+        this.queryBox = new JComboBox<>();
+        this.relvars = new ArrayList<>();
+        this.queries = new ArrayList<>();
         if (icon == null) {
             System.out.println("acquiring squirrel icon");
             Class clazz = getClass();
@@ -67,8 +73,25 @@ public class SquirrelFrame extends JFrame {
                     e.printStackTrace();
                 }
             }
+            URL u2 = loader.getResource("./School_query.sql");
+            if (u2 != null) {
+                try {
+                    URI queryUri = u2.toURI();
+                    File queries = new File(queryUri);
+                    if (queries.exists()) {
+                        byte[] bytes = IO.readFile(queries);
+                        if (bytes != null) {
+                            String text = new String(bytes);
+                            loadQueries(text);
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
-        setPreferredSize(new Dimension(800, 480));
+        setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
+        //setPreferredSize(new Dimension(800, 480));
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         JMenuBar bar = new JMenuBar();
         JMenu file = new JMenu("File");
@@ -86,11 +109,16 @@ public class SquirrelFrame extends JFrame {
         file.add(exit);
         bar.add(file);
         setJMenuBar(bar);
-        add(pane);
+        JPanel top = new JPanel();
+        //top.setPreferredSize(new Dimension(400, 200));
+        top.add(pane);
+        add(top);
+        add(panel);
         pack();
         if (icon != null) {
             setIconImage(icon);
         }
+        setResizable(false);
         setLocationRelativeTo(null);
     }
 
@@ -102,7 +130,6 @@ public class SquirrelFrame extends JFrame {
     public void loadDatabase(String text) {
         String[] split = text.split("\\n");
         boolean found = false;
-        List<Relvar> relvars = new ArrayList<>();
         List<String> attributes = new ArrayList<>();
         String title = null;
         Relvar relvar = null;
@@ -146,15 +173,13 @@ public class SquirrelFrame extends JFrame {
                 }
             }
         }
-        setup(relvars);
+        setupDatabase();
     }
 
     /**
      * Sets up the JTable for each tab.
-     *
-     * @param relvars The list of relvars.
      */
-    private void setup(List<Relvar> relvars) {
+    private void setupDatabase() {
         for (Relvar r : relvars) {
             NonEditableModel model = new NonEditableModel(r.getData(),
                     r.getAttributes().toArray(new String[r.getAttributes().size()]));
@@ -162,10 +187,87 @@ public class SquirrelFrame extends JFrame {
             table.setModel(model);
             table.getTableHeader().setReorderingAllowed(false);
             JScrollPane panel = new JScrollPane(table);
+            panel.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+            panel.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
             Tab tab = new Tab(r.getTitle(), table, r);
             pane.addTab(tab.getTitle(), panel);
-            System.out.println("KEY: " + r.getKey());
+            pane.setPreferredSize(new Dimension(500, 200));
         }
+    }
+
+    /**
+     * Loads up the queries from the SQL file and then fills in the JComboBox.
+     *
+     * @param text The String representation of the SQL file.
+     */
+    public void loadQueries(String text) {
+        String[] split = text.split("\\n");
+        for (String s : split) {
+            s = s.replaceAll("\\s+", " ").trim();
+            if (s.isEmpty()) {
+                continue;
+            }
+            boolean found = false;
+            boolean search = false;
+            String searchAttribute = null;
+            String[] skips = {"select", "from"};
+            List<String> attributes = new ArrayList<>();
+            AtomicReference<String> table = new AtomicReference<>();
+            AtomicReference<String> searchValue = new AtomicReference<>();
+            String[] separated = s.replace(",", "").replace("'", "").replace(";", "").replace("=", "").split(" ");
+            outer: for (String x : separated) {
+                if (x.trim().isEmpty()) {
+                    continue;
+                } else if (search) {
+                    searchAttribute = x;
+                    search = false;
+                    found = true;
+                    continue;
+                } else if (found) {
+                    searchValue.set(x);
+                }
+                for (String sk : skips) {
+                    if (x.equalsIgnoreCase(sk)) {
+                        continue outer;
+                    }
+                }
+                if (x.equalsIgnoreCase("where")) {
+                    search = true;
+                    continue;
+                }
+                relvars.forEach(r -> {
+                    r.getAttributes().forEach(a -> {
+                        if (x.equalsIgnoreCase(a.replaceAll("<.*?>", ""))) {
+                            attributes.add(x);
+                        }
+                    });
+                    if (r.getTitle().equalsIgnoreCase(x)) {
+                        table.set(r.getTitle());
+                    }
+                });
+            }
+            AtomicReference<Relvar> relvar = new AtomicReference<>();
+            relvars.forEach(r -> {
+                if (r.getTitle().equals(table.get())) {
+                    relvar.set(r);
+                }
+            });
+            queries.add(new Query(s, table.get(), searchAttribute, searchValue.get(), relvar.get(), attributes));
+            System.out.println("Query added: " + s);
+            System.out.println("\tTable: " + table);
+            System.out.println("\tSearch attribute: " + searchAttribute);
+            System.out.println("\tSearch value: " + searchValue.get());
+            System.out.println("\tAttributes: " + Arrays.toString(attributes.toArray(new String[attributes.size()])));
+        }
+        setupQueries();
+    }
+
+    /**
+     * Populates the JComboBox with the queries.
+     */
+    private void setupQueries() {
+        queries.forEach(q -> queryBox.addItem(q.getQuery()));
+        panel.add(queryBox);
     }
 
     /**
