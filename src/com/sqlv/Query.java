@@ -9,7 +9,6 @@ import java.util.List;
 public class Query {
 
     private final String query;
-    private final String table;
     private final String attribute;
     private final String value;
     private final Relvar relvar;
@@ -20,15 +19,13 @@ public class Query {
      * Constructs a Query from relevant information.
      *
      * @param query      The query in its entirety.
-     * @param table      The table to be queried.
      * @param attribute  The attribute to search for.
      * @param value      The value to search for.
      * @param relvar     The related relvar.
      * @param attributes The attributes to pull.
      */
-    public Query(String query, String table, String attribute, String value, Relvar relvar, List<String> attributes) {
+    public Query(String query, String attribute, String value, Relvar relvar, List<String> attributes) {
         this.query = query;
-        this.table = table;
         this.attribute = attribute;
         this.value = value;
         this.relvar = relvar;
@@ -40,13 +37,6 @@ public class Query {
      */
     public String getQuery() {
         return query;
-    }
-
-    /**
-     * @return The table's title.
-     */
-    public String getTable() {
-        return table;
     }
 
     /**

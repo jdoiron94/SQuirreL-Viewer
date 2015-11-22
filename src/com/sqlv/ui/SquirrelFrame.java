@@ -332,7 +332,7 @@ public class SquirrelFrame extends JFrame {
                     relvar.set(r);
                 }
             });
-            queries.add(new Query(s, table.get(), searchAttribute, searchValue.get(), relvar.get(), attributes));
+            queries.add(new Query(s, searchAttribute, searchValue.get(), relvar.get(), attributes));
         }
         setupQueries();
     }
@@ -449,19 +449,5 @@ public class SquirrelFrame extends JFrame {
             }
         }
         return count;
-    }
-
-    /**
-     * @return The entered username.
-     */
-    public String getUsername() {
-        return username;
-    }
-
-    /**
-     * @return The entered password.
-     */
-    public String getPassword() {
-        return password;
     }
 }
