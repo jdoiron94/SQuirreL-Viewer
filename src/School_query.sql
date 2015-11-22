@@ -1,4 +1,4 @@
-select classroom, TeacherFN, TeacherLN from teacher where Subject = 'Mathematics';
+select Classroom, TeacherFN, TeacherLN from teacher where Subject = 'Mathematics';
 select TeacherID from teacher where Classroom = 100;
 select TeacherID, TeacherLN, Subject from teacher;
 select 1Class, 2Class, 3Class, 4Class, 5Class, 6Class from stuschedule where StudentID = 12345;

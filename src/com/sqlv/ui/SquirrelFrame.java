@@ -5,7 +5,9 @@ import com.sqlv.Relvar;
 import com.sqlv.api.util.IO;
 
 import javax.swing.*;
+import javax.swing.table.TableModel;
 import java.awt.*;
+import java.awt.event.ItemEvent;
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
@@ -31,6 +33,7 @@ public class SquirrelFrame extends JFrame {
     private final JComboBox<String> queryBox;
     private final List<Relvar> relvars;
     private final List<Query> queries;
+    private final List<Tab> tabs;
 
     /**
      * Constructs a SquirrelFrame and sets the user and pass fields.
@@ -49,6 +52,7 @@ public class SquirrelFrame extends JFrame {
         this.queryBox = new JComboBox<>();
         this.relvars = new ArrayList<>();
         this.queries = new ArrayList<>();
+        this.tabs = new ArrayList<>();
         if (icon == null) {
             System.out.println("acquiring squirrel icon");
             Class clazz = getClass();
@@ -91,7 +95,6 @@ public class SquirrelFrame extends JFrame {
             }
         }
         setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
-        //setPreferredSize(new Dimension(800, 480));
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         JMenuBar bar = new JMenuBar();
         JMenu file = new JMenu("File");
@@ -109,11 +112,12 @@ public class SquirrelFrame extends JFrame {
         file.add(exit);
         bar.add(file);
         setJMenuBar(bar);
-        JPanel top = new JPanel();
-        //top.setPreferredSize(new Dimension(400, 200));
-        top.add(pane);
-        add(top);
-        add(panel);
+        JPanel left = new JPanel();
+        left.setLayout(new BoxLayout(left, BoxLayout.PAGE_AXIS));
+        left.add(pane);
+        left.add(panel);
+        setLayout(new BoxLayout(getContentPane(), BoxLayout.LINE_AXIS));
+        add(left);
         pack();
         if (icon != null) {
             setIconImage(icon);
@@ -127,7 +131,7 @@ public class SquirrelFrame extends JFrame {
      *
      * @param text The String representation of the SQL file.
      */
-    public void loadDatabase(String text) {
+    private void loadDatabase(String text) {
         String[] split = text.split("\\n");
         boolean found = false;
         List<String> attributes = new ArrayList<>();
@@ -184,15 +188,15 @@ public class SquirrelFrame extends JFrame {
             NonEditableModel model = new NonEditableModel(r.getData(),
                     r.getAttributes().toArray(new String[r.getAttributes().size()]));
             JTable table = new JTable(model);
-            table.setModel(model);
             table.getTableHeader().setReorderingAllowed(false);
             JScrollPane panel = new JScrollPane(table);
             panel.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
             panel.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
             Tab tab = new Tab(r.getTitle(), table, r);
+            tabs.add(tab);
             pane.addTab(tab.getTitle(), panel);
-            pane.setPreferredSize(new Dimension(500, 200));
         }
+        pane.setPreferredSize(new Dimension(500, 200));
     }
 
     /**
@@ -200,10 +204,10 @@ public class SquirrelFrame extends JFrame {
      *
      * @param text The String representation of the SQL file.
      */
-    public void loadQueries(String text) {
+    private void loadQueries(String text) {
         String[] split = text.split("\\n");
         for (String s : split) {
-            s = s.replaceAll("\\s+", " ").trim();
+            s = s.replace(",", "").replace("'", "").replace(";", "").replace("=", "").replaceAll("\\s+", " ").trim();
             if (s.isEmpty()) {
                 continue;
             }
@@ -214,17 +218,16 @@ public class SquirrelFrame extends JFrame {
             List<String> attributes = new ArrayList<>();
             AtomicReference<String> table = new AtomicReference<>();
             AtomicReference<String> searchValue = new AtomicReference<>();
-            String[] separated = s.replace(",", "").replace("'", "").replace(";", "").replace("=", "").split(" ");
+            String[] separated = s.split(" ");
             outer: for (String x : separated) {
-                if (x.trim().isEmpty()) {
-                    continue;
-                } else if (search) {
+                if (search) {
                     searchAttribute = x;
                     search = false;
                     found = true;
                     continue;
                 } else if (found) {
                     searchValue.set(x);
+                    break;
                 }
                 for (String sk : skips) {
                     if (x.equalsIgnoreCase(sk)) {
@@ -237,7 +240,7 @@ public class SquirrelFrame extends JFrame {
                 }
                 relvars.forEach(r -> {
                     r.getAttributes().forEach(a -> {
-                        if (x.equalsIgnoreCase(a.replaceAll("<.*?>", ""))) {
+                        if (x.equalsIgnoreCase(a.replaceAll("<.*?>", "")) && !attributes.contains(x)) {
                             attributes.add(x);
                         }
                     });
@@ -267,7 +270,53 @@ public class SquirrelFrame extends JFrame {
      */
     private void setupQueries() {
         queries.forEach(q -> queryBox.addItem(q.getQuery()));
+        queryBox.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                System.out.println("state change");
+            }
+        });
         panel.add(queryBox);
+        runQuery(queries.get(4));
+        /*Relvar relvar = new Relvar("results", null);
+        relvar.se
+        Tab results = new Tab();
+        pane.addTab("results", );*/
+    }
+
+    private void runQuery(Query query) {
+        //Relvar relvar = query.getRelvar();
+        //String[][] data = relvar.getData();
+        AtomicReference<JTable> table = new AtomicReference<>(new JTable());
+        if (query.getAttribute() == null) {
+            query.getAttributes().forEach(a -> table.set(getColumn(a, query.getRelvar())));
+        }
+        JScrollPane panel = new JScrollPane(table.get());
+        panel.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+        panel.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        pane.addTab("results", panel);
+    }
+
+    private JTable getColumn(String attribute, Relvar relvar) {
+        attribute = attribute.equals(relvar.getKey()) ? "<html><b>" + attribute + "</b></html>" : attribute;
+        int index = relvar.getAttributes().indexOf(attribute);
+        System.out.println("Column found at index " + index);
+        AtomicReference<JTable> table = new AtomicReference<>();
+        tabs.forEach(t -> {
+            if (t.getRelvar().equals(relvar)) {
+                table.set(t.getTable());
+            }
+        });
+        TableModel tableModel = table.get().getModel();
+        int rows = tableModel.getRowCount();
+        String[][] output = new String[rows][1];
+        int column = table.get().convertColumnIndexToModel(index);
+        for (int i = 0; i < rows; i++) {
+            output[i][0] = tableModel.getValueAt(i, column).toString();
+        }
+        NonEditableModel model = new NonEditableModel(output, new String[]{attribute});
+        JTable t = new JTable(model);
+        t.getTableHeader().setReorderingAllowed(false);
+        return t;
     }
 
     /**
