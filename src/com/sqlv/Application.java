@@ -4,8 +4,8 @@ import com.sqlv.api.util.OperatingSystem;
 import com.sqlv.ui.SquirrelFrame;
 import com.sqlv.ui.SquirrelLogin;
 
-import javax.swing.UIManager;
-import java.awt.EventQueue;
+import javax.swing.*;
+import java.awt.*;
 
 /**
  * @author Jacob Doiron

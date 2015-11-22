@@ -13,6 +13,7 @@ public enum OperatingSystem {
 
     /**
      * Gets the user's running operating system.
+     *
      * @return If found, the <t>OperatingSystem</t> enum representing the os the user is running; otherwise, <t>OTHER</t>;
      */
     public static OperatingSystem getSystem() {

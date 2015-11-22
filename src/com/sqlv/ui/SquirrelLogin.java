@@ -1,10 +1,12 @@
 package com.sqlv.ui;
 
+import com.sqlv.api.util.ResourceLoader;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.net.URL;
+import java.io.InputStream;
 
 /**
  * @author Jacob
@@ -32,9 +34,9 @@ public class SquirrelLogin extends JDialog {
      * /**
      * Constructs a login interface containing containers for username and password input.
      *
-     * @param owner The frame which owns this object.
-     * @param username The default username to set.
-     * @param password The default password to set.
+     * @param owner        The frame which owns this object.
+     * @param username     The default username to set.
+     * @param password     The default password to set.
      * @param passSelected Whether or not to show the password.
      */
     public SquirrelLogin(JFrame owner, String username, String password, boolean passSelected) {
@@ -42,11 +44,11 @@ public class SquirrelLogin extends JDialog {
         this.password = password;
         this.passSelected = passSelected;
         if (icon == null) {
-            Class clazz = getClass();
-            ClassLoader loader = clazz.getClassLoader();
-            URL url = loader.getResource("./icons/lock.png");
-            if (url != null) {
-                icon = new ImageIcon(url).getImage();
+            ResourceLoader resLoader = new ResourceLoader("icons/");
+            InputStream stream = resLoader.getStream("lock.png");
+            byte[] bytes = resLoader.readStream(stream);
+            if (bytes != null) {
+                icon = new ImageIcon(bytes).getImage();
             }
         }
         setTitle("Squirrel details");
@@ -113,9 +115,7 @@ public class SquirrelLogin extends JDialog {
         add(getContentPane(), master, 15, 0, true);
         pack();
         setModal(true);
-        if (icon != null) {
-            setIconImage(icon);
-        }
+        setIconImage(icon);
         setResizable(false);
         setLocationRelativeTo(owner);
         addWindowListener(new WindowAdapter() {
@@ -158,8 +158,8 @@ public class SquirrelLogin extends JDialog {
      * Pads a container with the specified padding.
      *
      * @param container The container to pad.
-     * @param hGap The horizontal gap.
-     * @param vGap The vertical gap.
+     * @param hGap      The horizontal gap.
+     * @param vGap      The vertical gap.
      */
     private void pad(Container container, int hGap, int vGap) {
         if (hGap > 0) {
@@ -173,11 +173,11 @@ public class SquirrelLogin extends JDialog {
     /**
      * Adds the specified component to the container with specified padding.
      *
-     * @param container The container to add a component to.
-     * @param component The component to add.
+     * @param container  The container to add a component to.
+     * @param component  The component to add.
      * @param horizontal The horizontal gap to pad.
-     * @param vertical The vertical gap to pad.
-     * @param padBoth <t>true</t> to pad both before and after adding the component; otherwise, <t>false</t>.
+     * @param vertical   The vertical gap to pad.
+     * @param padBoth    <t>true</t> to pad both before and after adding the component; otherwise, <t>false</t>.
      */
     private void add(Container container, Component component, int horizontal, int vertical, boolean padBoth) {
         if (padBoth) {

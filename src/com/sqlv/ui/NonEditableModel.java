@@ -8,6 +8,12 @@ import javax.swing.table.DefaultTableModel;
  */
 public class NonEditableModel extends DefaultTableModel {
 
+    /**
+     * Constructs a NonEditableModel which disables editing of JTable cells.
+     *
+     * @param data        The data array.
+     * @param columnNames The table header names.
+     */
     public NonEditableModel(Object[][] data, String[] columnNames) {
         super(data, columnNames);
     }

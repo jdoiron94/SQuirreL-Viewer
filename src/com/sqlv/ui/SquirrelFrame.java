@@ -2,17 +2,17 @@ package com.sqlv.ui;
 
 import com.sqlv.Query;
 import com.sqlv.Relvar;
-import com.sqlv.api.util.IO;
+import com.sqlv.api.util.ResourceLoader;
 
 import javax.swing.*;
 import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.ItemEvent;
-import java.io.File;
-import java.net.URI;
-import java.net.URL;
+import java.io.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -38,11 +38,13 @@ public class SquirrelFrame extends JFrame {
     private final List<Query> queries;
     private final List<Tab> tabs;
 
+    private final DateFormat formatter = new SimpleDateFormat("MM/dd/YYYY hh:mm:ss");
+
     /**
      * Constructs a SquirrelFrame and sets the user and pass fields.
      *
-     * @param username The username to be set.
-     * @param password The password to be set.
+     * @param username     The username to be set.
+     * @param password     The password to be set.
      * @param passSelected Whether or not to show the password.
      */
     public SquirrelFrame(String username, String password, boolean passSelected) {
@@ -57,43 +59,24 @@ public class SquirrelFrame extends JFrame {
         this.queries = new ArrayList<>();
         this.tabs = new ArrayList<>();
         if (icon == null) {
-            Class clazz = getClass();
-            ClassLoader loader = clazz.getClassLoader();
-            URL url = loader.getResource("./icons/squirrel.png");
-            if (url != null) {
-                icon = new ImageIcon(url).getImage();
+            ResourceLoader imgLoader = new ResourceLoader("icons/");
+            InputStream stream = imgLoader.getStream("squirrel.png");
+            byte[] b = imgLoader.readStream(stream);
+            if (b != null) {
+                icon = new ImageIcon(b).getImage();
             }
-            URL u = loader.getResource("./School.sql");
-            if (u != null) {
-                try {
-                    URI schoolUri = u.toURI();
-                    File schoolDb = new File(schoolUri);
-                    if (schoolDb.exists()) {
-                        byte[] database = IO.readFile(schoolDb);
-                        if (database != null) {
-                            String text = new String(database);
-                            loadDatabase(text);
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            ResourceLoader dbLoader = new ResourceLoader("db/");
+            stream = dbLoader.getStream("School.sql");
+            b = dbLoader.readStream(stream);
+            if (b != null) {
+                String text = new String(b);
+                loadDatabase(text);
             }
-            URL u2 = loader.getResource("./School_query.sql");
-            if (u2 != null) {
-                try {
-                    URI queryUri = u2.toURI();
-                    File queries = new File(queryUri);
-                    if (queries.exists()) {
-                        byte[] bytes = IO.readFile(queries);
-                        if (bytes != null) {
-                            String text = new String(bytes);
-                            loadQueries(text);
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+            stream = dbLoader.getStream("School_query.sql");
+            b = dbLoader.readStream(stream);
+            if (b != null) {
+                String text = new String(b);
+                loadQueries(text);
             }
         }
         setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
@@ -117,9 +100,7 @@ public class SquirrelFrame extends JFrame {
         add(pane);
         add(panel);
         pack();
-        if (icon != null) {
-            setIconImage(icon);
-        }
+        setIconImage(icon);
         setResizable(false);
         setLocationRelativeTo(null);
     }
@@ -183,10 +164,12 @@ public class SquirrelFrame extends JFrame {
      */
     private void setupDatabase() {
         for (Relvar r : relvars) {
-            NonEditableModel model = new NonEditableModel(r.getData(),
-                    r.getAttributes().toArray(new String[r.getAttributes().size()]));
+            String[] attributes = r.getAttributes().toArray(new String[r.getAttributes().size()]);
+            NonEditableModel model = new NonEditableModel(r.getData(), attributes);
             JTable table = new JTable(model);
             table.getTableHeader().setReorderingAllowed(false);
+            JPopupMenu popup = createPopup(table, r.getTitle(), attributes);
+            table.setComponentPopupMenu(popup);
             JScrollPane panel = new JScrollPane(table);
             panel.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
             panel.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -195,6 +178,87 @@ public class SquirrelFrame extends JFrame {
             pane.addTab(tab.getTitle(), panel);
         }
         pane.setPreferredSize(new Dimension(500, 200));
+    }
+
+    /**
+     * Disables text input to the specified Container.
+     *
+     * @param container The container to disable JTextField input in.
+     */
+    private void disableInput(Container container) {
+        Component[] components = container.getComponents();
+        for (Component c : components) {
+            if (c instanceof JTextField) {
+                JTextField field = (JTextField) c;
+                field.setEnabled(false);
+                break;
+            } else if (c instanceof Container) {
+                disableInput((Container) c);
+            }
+        }
+    }
+
+    /**
+     * Creates a popup menu for exporting the specified table.
+     *
+     * @param table      The table.
+     * @param title      The title of the table.
+     * @param attributes The attributes of the table.
+     * @return The JPopupMenu of the table.
+     */
+    private JPopupMenu createPopup(JTable table, String title, String[] attributes) {
+        JPopupMenu popup = new JPopupMenu();
+        JMenuItem export = new JMenuItem("Export " + title);
+        export.addActionListener(event -> {
+            JFileChooser chooser = new JFileChooser();
+            disableInput(chooser);
+            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            chooser.setCurrentDirectory(new File("."));
+            int selected = chooser.showDialog(this, "Save directory");
+            if (selected == JFileChooser.APPROVE_OPTION) {
+                exportTable(table.getModel(), title, attributes, chooser.getSelectedFile().getAbsolutePath());
+            }
+        });
+        popup.add(export);
+        return popup;
+    }
+
+    /**
+     * Exports the selected table into a text file and then opens it.
+     *
+     * @param model      The table model to export.
+     * @param attributes The attributes of the table.
+     * @param name       The name of the table.
+     * @param path       The path to save to.
+     */
+    private void exportTable(TableModel model, String name, String[] attributes, String path) {
+        String date = formatter.format(new Date());
+        String fileName = path + "\\" + name + " " + date.replace("/", "-").replace(":", "-") + ".txt";
+        File file = new File(fileName);
+        try {
+            if (file.createNewFile()) {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+                for (int i = 0; i < attributes.length; i++) {
+                    String val = attributes[i].replaceAll("<.*?>", "");
+                    writer.write(i == attributes.length - 1 ? String.format("%16s %n", val)
+                            : String.format("%16s \t", val));
+                }
+                for (int i = 0; i < model.getRowCount(); i++) {
+                    for (int j = 0; j < model.getColumnCount(); j++) {
+                        String val = model.getValueAt(i, j).toString();
+                        writer.write(j == model.getColumnCount() - 1 ? String.format("%16s %n", val)
+                                : String.format("%16s \t", val));
+                    }
+                }
+                writer.close();
+                Desktop desktop = Desktop.getDesktop();
+                if (desktop != null) {
+                    desktop.open(file);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -220,7 +284,8 @@ public class SquirrelFrame extends JFrame {
             String[] separated = updated.split(" ");
             Pattern regex = Pattern.compile("[^\\s\"']+|\"([^\"]*)\"|'([^']*)'");
             Matcher matcher = regex.matcher(updated);
-            outer: for (String x : separated) {
+            outer:
+            for (String x : separated) {
                 if (x.isEmpty()) {
                     continue;
                 } else if (search) {
@@ -268,11 +333,6 @@ public class SquirrelFrame extends JFrame {
                 }
             });
             queries.add(new Query(s, table.get(), searchAttribute, searchValue.get(), relvar.get(), attributes));
-            System.out.println("Query added: " + s);
-            System.out.println("\tTable: " + table);
-            System.out.println("\tSearch attribute: " + searchAttribute);
-            System.out.println("\tSearch value: " + searchValue.get());
-            System.out.println("\tAttributes: " + Arrays.toString(attributes.toArray(new String[attributes.size()])));
         }
         setupQueries();
     }
@@ -298,7 +358,11 @@ public class SquirrelFrame extends JFrame {
      */
     private void runQuery(Query query) {
         AtomicReference<JTable> table = new AtomicReference<>(new JTable());
-        table.set(queryTable(query.getAttributes(), query.getAttribute(), query.getValue(), query.getRelvar()));
+        JTable results = queryTable(query.getAttributes(), query.getAttribute(), query.getValue(), query.getRelvar());
+        JPopupMenu popup = createPopup(results, query.getRelvar().getTitle(),
+                query.getAttributes().toArray(new String[query.getAttributes().size()]));
+        results.setComponentPopupMenu(popup);
+        table.set(results);
         JScrollPane panel = new JScrollPane(table.get());
         panel.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         if (pane.getTabCount() == 4) {
@@ -312,7 +376,7 @@ public class SquirrelFrame extends JFrame {
      * Gets the specified attribute column from the specified relvar.
      *
      * @param attributes The attributes to get.
-     * @param relvar The relvar from which to get the attribute.
+     * @param relvar     The relvar from which to get the attribute.
      * @return The JTable representation of the column.
      */
     private JTable queryTable(List<String> attributes, String searchAttribute, String value, Relvar relvar) {
@@ -372,7 +436,7 @@ public class SquirrelFrame extends JFrame {
     /**
      * Gets the count of a given character within a String.
      *
-     * @param c The character to search for.
+     * @param c    The character to search for.
      * @param text The text to query.
      * @return The count of the character within the String.
      */

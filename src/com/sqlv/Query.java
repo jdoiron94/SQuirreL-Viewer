@@ -16,6 +16,16 @@ public class Query {
 
     private final List<String> attributes;
 
+    /**
+     * Constructs a Query from relevant information.
+     *
+     * @param query      The query in its entirety.
+     * @param table      The table to be queried.
+     * @param attribute  The attribute to search for.
+     * @param value      The value to search for.
+     * @param relvar     The related relvar.
+     * @param attributes The attributes to pull.
+     */
     public Query(String query, String table, String attribute, String value, Relvar relvar, List<String> attributes) {
         this.query = query;
         this.table = table;

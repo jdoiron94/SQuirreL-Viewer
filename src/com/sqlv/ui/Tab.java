@@ -2,7 +2,7 @@ package com.sqlv.ui;
 
 import com.sqlv.Relvar;
 
-import javax.swing.JTable;
+import javax.swing.*;
 
 /**
  * @author Jacob Doiron
