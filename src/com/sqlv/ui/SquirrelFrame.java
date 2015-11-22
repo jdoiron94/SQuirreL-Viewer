@@ -14,6 +14,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -207,7 +208,7 @@ public class SquirrelFrame extends JFrame {
     private void loadQueries(String text) {
         String[] split = text.split("\\n");
         for (String s : split) {
-            s = s.replace(",", "").replace("'", "").replace(";", "").replace("=", "").replaceAll("\\s+", " ").trim();
+            s = s.replaceAll("\\s+", " ").trim();
             if (s.isEmpty()) {
                 continue;
             }
@@ -218,9 +219,11 @@ public class SquirrelFrame extends JFrame {
             List<String> attributes = new ArrayList<>();
             AtomicReference<String> table = new AtomicReference<>();
             AtomicReference<String> searchValue = new AtomicReference<>();
-            String[] separated = s.split(" ");
+            String[] separated = s.replace(",", "").replace("'", "").replace(";", "").replace("=", "").split(" ");
             outer: for (String x : separated) {
-                if (search) {
+                if (s.isEmpty()) {
+                    continue;
+                } else if (search) {
                     searchAttribute = x;
                     search = false;
                     found = true;
@@ -276,19 +279,24 @@ public class SquirrelFrame extends JFrame {
             }
         });
         panel.add(queryBox);
-        runQuery(queries.get(4));
+        runQuery(queries.get(2));
         /*Relvar relvar = new Relvar("results", null);
         relvar.se
         Tab results = new Tab();
         pane.addTab("results", );*/
     }
 
+    /**
+     * Runs the specified SQL query.
+     *
+     * @param query The query to run.
+     */
     private void runQuery(Query query) {
         //Relvar relvar = query.getRelvar();
         //String[][] data = relvar.getData();
         AtomicReference<JTable> table = new AtomicReference<>(new JTable());
         if (query.getAttribute() == null) {
-            query.getAttributes().forEach(a -> table.set(getColumn(a, query.getRelvar())));
+             table.set(getColumn(query.getAttributes(), query.getRelvar()));
         }
         JScrollPane panel = new JScrollPane(table.get());
         panel.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
@@ -296,10 +304,25 @@ public class SquirrelFrame extends JFrame {
         pane.addTab("results", panel);
     }
 
-    private JTable getColumn(String attribute, Relvar relvar) {
-        attribute = attribute.equals(relvar.getKey()) ? "<html><b>" + attribute + "</b></html>" : attribute;
-        int index = relvar.getAttributes().indexOf(attribute);
-        System.out.println("Column found at index " + index);
+    /**
+     * Gets the specified attribute column from the specified relvar.
+     *
+     * @param attributes The attributes to get.
+     * @param relvar The relvar from which to get the attribute.
+     * @return The JTable representation of the column.
+     */
+    private JTable getColumn(List<String> attributes, Relvar relvar) {
+        int[] columns = new int[attributes.size()];
+        AtomicInteger index = new AtomicInteger(0);
+        attributes.stream().forEachOrdered(a -> {
+            System.out.println("KEY: " + relvar.getKey());
+            a = a.equals(relvar.getKey()) ? "<html><b>" + a + "</b></html>" : a;
+            attributes.set(index.get(), a);
+            int idx = relvar.getAttributes().indexOf(a);
+            columns[index.get()] = idx;
+            System.out.println(a + " column found at index " + idx);
+            index.set(index.get() + 1);
+        });
         AtomicReference<JTable> table = new AtomicReference<>();
         tabs.forEach(t -> {
             if (t.getRelvar().equals(relvar)) {
@@ -308,14 +331,17 @@ public class SquirrelFrame extends JFrame {
         });
         TableModel tableModel = table.get().getModel();
         int rows = tableModel.getRowCount();
-        String[][] output = new String[rows][1];
-        int column = table.get().convertColumnIndexToModel(index);
-        for (int i = 0; i < rows; i++) {
-            output[i][0] = tableModel.getValueAt(i, column).toString();
+        String[][] output = new String[rows][columns.length];
+        for (int i = 0; i < columns.length; i++) {
+            int column = table.get().convertColumnIndexToModel(columns[i]);
+            for (int j = 0; j < rows; j++) {
+                output[j][i] = tableModel.getValueAt(j, column).toString();
+            }
         }
-        NonEditableModel model = new NonEditableModel(output, new String[]{attribute});
+        NonEditableModel model = new NonEditableModel(output, attributes.toArray(new String[attributes.size()]));
         JTable t = new JTable(model);
         t.getTableHeader().setReorderingAllowed(false);
+        System.out.println(t.getRowCount());
         return t;
     }
 
