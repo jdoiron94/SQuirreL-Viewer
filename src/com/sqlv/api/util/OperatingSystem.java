@@ -1,7 +1,7 @@
 package com.sqlv.api.util;
 
 /**
- * @author Jacob
+ * @author Jacob Doiron
  * @since 10/27/2015
  */
 public enum OperatingSystem {

@@ -9,7 +9,7 @@ import java.awt.event.WindowEvent;
 import java.io.InputStream;
 
 /**
- * @author Jacob
+ * @author Jacob Doiron
  * @since 10/28/2015
  */
 public class SquirrelLogin extends JDialog {
