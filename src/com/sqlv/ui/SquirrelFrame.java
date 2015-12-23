@@ -361,7 +361,7 @@ public class SquirrelFrame extends JFrame {
     private void runQuery(Query query) {
         AtomicReference<JTable> table = new AtomicReference<>(new JTable());
         JTable results = queryTable(query.getAttributes(), query.getAttribute(), query.getValue(), query.getRelvar());
-        JPopupMenu popup = createPopup(results, query.getRelvar().getTitle(),
+        JPopupMenu popup = createPopup(results, query.getRelvar().getTitle() + " results",
                 query.getAttributes().toArray(new String[query.getAttributes().size()]));
         results.setComponentPopupMenu(popup);
         table.set(results);
