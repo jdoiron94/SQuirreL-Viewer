@@ -33,7 +33,7 @@ public class ResourceLoader {
     public byte[] readStream(InputStream is) {
         try (ByteArrayOutputStream stream = new ByteArrayOutputStream()) {
             byte[] buffer = new byte[4096];
-            for (int i; (i = is.read(buffer)) != -1; ) {
+            for (int i; (i = is.read(buffer)) != -1;) {
                 stream.write(buffer, 0, i);
             }
             stream.flush();

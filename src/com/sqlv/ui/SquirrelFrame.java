@@ -28,6 +28,7 @@ public class SquirrelFrame extends JFrame {
     private String username;
     private String password;
     private Image icon;
+    private File cacheDir;
 
     private boolean passSelected;
 
@@ -213,9 +214,10 @@ public class SquirrelFrame extends JFrame {
             JFileChooser chooser = new JFileChooser();
             disableInput(chooser);
             chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            chooser.setCurrentDirectory(new File("."));
+            chooser.setCurrentDirectory(cacheDir == null ? new File(".") : cacheDir);
             int selected = chooser.showDialog(this, "Save directory");
             if (selected == JFileChooser.APPROVE_OPTION) {
+                cacheDir = chooser.getSelectedFile().getAbsoluteFile();
                 exportTable(table.getModel(), title, attributes, chooser.getSelectedFile().getAbsolutePath());
             }
         });
